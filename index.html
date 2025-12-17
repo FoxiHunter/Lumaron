@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lumaron — сайты на заказ</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <header class="topbar">
+      <div class="topbar__inner glass glass--nav" data-reveal="down">
+        <div class="brand">Lumaron</div>
+
+        <nav class="nav" aria-label="Навигация">
+          <a class="nav__link" href="#home">Главная</a>
+          <a class="nav__link" href="#cases">Кейсы</a>
+          <a class="nav__link" href="#templates">Шаблоны</a>
+          <a class="nav__link" href="#process">Процесс</a>
+          <a class="nav__link" href="#contact">Контакты</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="home" class="page">
+      <section class="section section--tight">
+        <div class="hero" data-reveal="up">
+          <h1 class="title">Сайты на заказ</h1>
+          <p class="subtitle">Дизайн, разработка и запуск. Чисто, быстро, без лишней мишуры.</p>
+
+          <div class="hero__cta">
+            <a class="btn" href="#cases">Смотреть кейсы</a>
+            <a class="btn btn--ghost" href="#contact">Оставить заявку</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="cases" class="section">
+        <div class="section__head" data-reveal="up">
+          <h2 class="h2">Наши проекты</h2>
+          <p class="muted">Переключайте стрелками — центр крупнее, боковые меньше.</p>
+        </div>
+
+        <div class="carousel glass" data-carousel data-reveal="up" aria-label="Карусель проектов">
+          <button class="carousel__btn" data-prev aria-label="Назад">←</button>
+          <div class="carousel__viewport" data-viewport></div>
+          <button class="carousel__btn" data-next aria-label="Вперёд">→</button>
+        </div>
+
+        <script type="application/json" id="casesData">
+          [
+            {
+              "title": "Корпоративный портал",
+              "text": "Система управления, роли, разделы, адаптив и строгая типографика.",
+              "img": "./images/case1.png"
+            },
+            {
+              "title": "Личный кабинет клиента",
+              "text": "Аналитика, статусы, уведомления, понятные сценарии пользователя.",
+              "img": "./images/case2.png"
+            },
+            {
+              "title": "Витрина услуг",
+              "text": "Landing/сайт-визитка: структура, доверие, акценты и CTA.",
+              "img": "./images/case3.png"
+            }
+          ]
+        </script>
+      </section>
+
+      <section id="templates" class="section">
+        <div class="section__head" data-reveal="up">
+          <h2 class="h2">Шаблоны</h2>
+          <p class="muted">Визуальные заготовки — быстро стартуем и подгоняем под бренд.</p>
+        </div>
+
+        <div class="grid grid--templates">
+          <article class="card glass" data-reveal="up">
+            <div class="card__media card__media--tpl">
+              <img src="./images/case1.png" alt="Шаблон: Корпоративный сайт" loading="lazy" />
+            </div>
+            <div class="card__body">
+              <h3 class="card__title">Корпоративный сайт</h3>
+              <p class="card__text">Услуги, кейсы, команда, блог, понятная структура.</p>
+            </div>
+          </article>
+
+          <article class="card glass" data-reveal="up" data-reveal-delay="80">
+            <div class="card__media card__media--tpl">
+              <img src="./images/case2.png" alt="Шаблон: Интернет-магазин" loading="lazy" />
+            </div>
+            <div class="card__body">
+              <h3 class="card__title">Интернет-магазин</h3>
+              <p class="card__text">Каталог, фильтры, корзина, оплата/доставка, интеграции.</p>
+            </div>
+          </article>
+
+          <article class="card glass" data-reveal="up" data-reveal-delay="160">
+            <div class="card__media card__media--tpl">
+              <img src="./images/case3.png" alt="Шаблон: Лендинг" loading="lazy" />
+            </div>
+            <div class="card__body">
+              <h3 class="card__title">Лендинг</h3>
+              <p class="card__text">Оффер → выгоды → доверие → CTA. Максимум конверсии.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="process" class="section">
+        <div class="section__head" data-reveal="up">
+          <h2 class="h2">Процесс разработки</h2>
+          <p class="muted">Понятные этапы — вы всегда знаете, что происходит и что дальше.</p>
+        </div>
+
+        <div class="process">
+          <article class="process__card glass" data-reveal="up">
+            <div class="process__num">01</div>
+            <div class="process__title">Бриф & цель</div>
+            <div class="process__text">Понимаем задачу, аудиторию, KPI и стиль.</div>
+          </article>
+
+          <article class="process__card glass" data-reveal="up" data-reveal-delay="60">
+            <div class="process__num">02</div>
+            <div class="process__title">Прототип</div>
+            <div class="process__text">Скелет страниц, логика блоков, согласование.</div>
+          </article>
+
+          <article class="process__card glass" data-reveal="up" data-reveal-delay="120">
+            <div class="process__num">03</div>
+            <div class="process__title">Дизайн</div>
+            <div class="process__text">UI-макеты + адаптивные версии.</div>
+          </article>
+
+          <article class="process__card glass" data-reveal="up" data-reveal-delay="180">
+            <div class="process__num">04</div>
+            <div class="process__title">Разработка</div>
+            <div class="process__text">Верстка, анимации, интеграции.</div>
+          </article>
+
+          <article class="process__card glass" data-reveal="up" data-reveal-delay="240">
+            <div class="process__num">05</div>
+            <div class="process__title">Запуск</div>
+            <div class="process__text">Тесты, домен, хостинг, публикация.</div>
+          </article>
+        </div>
+      </section>
+
+      <section id="contact" class="section">
+        <div class="section__head" data-reveal="up">
+          <h2 class="h2">Связаться с нами</h2>
+          <p class="muted">Можно развернуть и заполнить — ответим быстро.</p>
+        </div>
+
+        <details class="contact glass" data-reveal="up" id="contactDetails">
+          <summary class="contact__summary">
+            <span class="contact__summaryText">
+              Связаться с нами <span class="contact__onlyClosed">(развернуть форму)</span>
+            </span>
+            <span class="contact__chev">⌄</span>
+          </summary>
+
+          <div class="contact__panel" id="contactPanel">
+            <form class="form" id="contactForm">
+              <div class="form__grid">
+                <label class="field">
+                  <span class="field__label">Email <b>*</b></span>
+                  <input class="field__input" type="email" name="email" required placeholder="you@domain.com" />
+                </label>
+
+                <label class="field">
+                  <span class="field__label">Телефон (необязательно)</span>
+                  <input class="field__input" type="tel" name="phone" placeholder="+7 (___) ___-__-__" />
+                </label>
+
+                <label class="field form__span2">
+                  <span class="field__label">Имя и фамилия / Организация</span>
+                  <input class="field__input" type="text" name="name" placeholder="Иван Петров или ООО «Компания»" />
+                </label>
+
+                <label class="field form__span2">
+                  <span class="field__label">Комментарий</span>
+                  <textarea class="field__input field__input--ta" name="message" placeholder="Коротко опишите задачу"></textarea>
+                </label>
+              </div>
+
+              <div class="form__bottom">
+                <button class="btn" type="submit">Отправить</button>
+                <div class="form__hint">Нажимая “Отправить”, вы соглашаетесь на обработку данных.</div>
+              </div>
+
+              <div class="form__toast" id="formToast" aria-live="polite"></div>
+            </form>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <footer class="footerWide">
+      <div class="footerWide__inner glass" data-reveal="up">
+        <div class="footerWide__top">
+          <div>
+            <div class="footerWide__brand">Lumaron</div>
+            <div class="footerWide__small">Дизайн • Разработка • Запуск</div>
+          </div>
+        </div>
+
+        <div class="footerWide__grid">
+          <div class="footerWide__col">
+            <div class="footerWide__label">Почта</div>
+            <div class="footerWide__value">info@example.com</div>
+            <div class="footerWide__value">support@example.com</div>
+          </div>
+
+          <div class="footerWide__col">
+            <div class="footerWide__label">Соцсети</div>
+            <div class="footerWide__value">Telegram: @yourstudio</div>
+            <div class="footerWide__value">Instagram: @yourstudio</div>
+          </div>
+
+          <div class="footerWide__col">
+            <div class="footerWide__label">Документы</div>
+            <div class="footerWide__value">Политика конфиденциальности</div>
+            <div class="footerWide__value">Публичная оферта</div>
+          </div>
+        </div>
+
+        <div class="footerWide__bottom">© 2025 Lumaron. Все права защищены.</div>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

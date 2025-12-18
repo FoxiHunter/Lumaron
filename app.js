@@ -95,222 +95,259 @@
   })();
 
   /* ---------------------------
-     2) Carousel — NO DOM wipe during animation
+     2) Carousel — ROTATE SLIDES (no snap, no DOM wipe)
+     + smooth fade in/out on card content updates
   --------------------------- */
-/* 2) Carousel — ROTATE SLIDES (no snap, no DOM wipe) */
-(() => {
-  const root = document.querySelector("[data-carousel]");
-  if (!root) return;
+  (() => {
+    const root = document.querySelector("[data-carousel]");
+    if (!root) return;
 
-  const viewport = root.querySelector("[data-viewport]");
-  const btnPrev = root.querySelector("[data-prev]");
-  const btnNext = root.querySelector("[data-next]");
-  const dataEl = document.getElementById("casesData");
-  if (!viewport || !dataEl) return;
+    const viewport = root.querySelector("[data-viewport]");
+    const btnPrev = root.querySelector("[data-prev]");
+    const btnNext = root.querySelector("[data-next]");
+    const dataEl = document.getElementById("casesData");
+    if (!viewport || !dataEl) return;
 
-  let items = [];
-  try {
-    items = JSON.parse(dataEl.textContent.trim());
-  } catch {
-    items = [];
-  }
-  if (!items.length) return;
+    let items = [];
+    try {
+      items = JSON.parse(dataEl.textContent.trim());
+    } catch {
+      items = [];
+    }
+    if (!items.length) return;
 
-  const prefersReduce =
-    window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    let index = 0; // текущий центр
+    let lock = false;
 
-  let index = 0;     // текущий центр
-  let lock = false;
+    const ALL_ANIM = [
+      "anim-next-toLeft",
+      "anim-next-fromRight",
+      "anim-next-fadeOutLeft",
+      "anim-prev-toRight",
+      "anim-prev-fromLeft",
+      "anim-prev-fadeOutRight",
+    ];
 
-  const ALL_ANIM = [
-    "anim-next-toLeft",
-    "anim-next-fromRight",
-    "anim-next-fadeOutLeft",
-    "anim-prev-toRight",
-    "anim-prev-fromLeft",
-    "anim-prev-fadeOutRight",
-  ];
+    const clamp = (i) => {
+      const n = items.length;
+      return (i % n + n) % n;
+    };
 
-  const clamp = (i) => {
-    const n = items.length;
-    return (i % n + n) % n;
-  };
+    // 1) создаём слайды ОДИН раз и больше не делаем innerHTML wipe
+    const makeSlide = (pos) => {
+      const el = document.createElement("div");
+      el.className = `slide slide--${pos}`;
 
-  const escapeHtml = (s) =>
-    String(s)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+      const card = document.createElement("div");
+      card.className = "slide__card";
 
-  const fill = (el, item) => {
-    el.innerHTML = `
-      <div class="slide__card">
-        <div class="slide__media">
-          <img src="${item.img}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" />
-        </div>
-        <div class="slide__body">
-          <h3 class="slide__title">${escapeHtml(item.title)}</h3>
-          <p class="slide__text">${escapeHtml(item.text)}</p>
-        </div>
-      </div>
-    `;
-  };
+      const media = document.createElement("div");
+      media.className = "slide__media";
 
-  const makeSlide = (pos) => {
-    const el = document.createElement("div");
-    el.className = `slide slide--${pos}`;
-    return el;
-  };
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.decoding = "async";
+      media.appendChild(img);
 
-  // 3 постоянных слайда
-  let elL = makeSlide("left");
-  let elC = makeSlide("center");
-  let elR = makeSlide("right");
-  viewport.replaceChildren(elL, elC, elR);
+      const body = document.createElement("div");
+      body.className = "slide__body";
 
-  const syncAll = () => {
-    fill(elL, items[clamp(index - 1)]);
-    fill(elC, items[clamp(index)]);
-    fill(elR, items[clamp(index + 1)]);
-  };
+      const title = document.createElement("h3");
+      title.className = "slide__title";
 
-  const clearAnim = () => {
-    [elL, elC, elR].forEach((el) => el.classList.remove(...ALL_ANIM));
-  };
+      const text = document.createElement("p");
+      text.className = "slide__text";
 
-  const setPosClasses = () => {
-    elL.classList.remove("slide--center", "slide--right");
-    elL.classList.add("slide--left");
+      body.appendChild(title);
+      body.appendChild(text);
 
-    elC.classList.remove("slide--left", "slide--right");
-    elC.classList.add("slide--center");
+      card.appendChild(media);
+      card.appendChild(body);
+      el.appendChild(card);
 
-    elR.classList.remove("slide--left", "slide--center");
-    elR.classList.add("slide--right");
-  };
+      // refs
+      el._refs = { img, title, text };
+      return el;
+    };
 
-  const forceRestart = (el) => {
-    // перезапуск анимации гарантированно
-    void el.offsetWidth;
-  };
+    // 2) fill: обновляем только поля, + плавный fade при подмене контента
+    const fill = async (el, item, { animate = false } = {}) => {
+      if (!el || !el._refs) return;
+      const { img, title, text } = el._refs;
 
-  const waitAnimEnd = (el, fallback = 700) =>
-    new Promise((resolve) => {
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        el.removeEventListener("animationend", onEnd);
-        resolve();
-      };
-      const onEnd = (e) => {
-        if (e.target !== el) return;
-        finish();
-      };
-      el.addEventListener("animationend", onEnd);
-      setTimeout(finish, fallback);
+      if (animate && !prefersReduce) {
+        el.classList.add("is-updating"); // CSS сделает fade-out
+        await raf2();
+      }
+
+      img.src = item.img;
+      img.alt = String(item.title || "");
+      title.textContent = String(item.title || "");
+      text.textContent = String(item.text || "");
+
+      if (animate && !prefersReduce) {
+        await raf2(); // применить контент
+        el.classList.remove("is-updating"); // fade-in
+      } else {
+        el.classList.remove("is-updating");
+      }
+    };
+
+    // 3 постоянных слайда
+    let elL = makeSlide("left");
+    let elC = makeSlide("center");
+    let elR = makeSlide("right");
+    viewport.replaceChildren(elL, elC, elR);
+
+    const syncAll = async () => {
+      await fill(elL, items[clamp(index - 1)], { animate: false });
+      await fill(elC, items[clamp(index)], { animate: false });
+      await fill(elR, items[clamp(index + 1)], { animate: false });
+    };
+
+    const clearAnim = () => {
+      [elL, elC, elR].forEach((el) => el.classList.remove(...ALL_ANIM));
+    };
+
+    const setPosClasses = () => {
+      elL.classList.remove("slide--center", "slide--right");
+      elL.classList.add("slide--left");
+
+      elC.classList.remove("slide--left", "slide--right");
+      elC.classList.add("slide--center");
+
+      elR.classList.remove("slide--left", "slide--center");
+      elR.classList.add("slide--right");
+    };
+
+    const forceRestart = (el) => {
+      void el.offsetWidth;
+    };
+
+    const waitAnimEnd = (el, fallback = 760) =>
+      new Promise((resolve) => {
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          el.removeEventListener("animationend", onEnd);
+          resolve();
+        };
+        const onEnd = (e) => {
+          if (e.target !== el) return;
+          finish();
+        };
+        el.addEventListener("animationend", onEnd);
+        setTimeout(finish, fallback);
+      });
+
+    const disableBtns = (v) => {
+      if (btnPrev) btnPrev.disabled = v;
+      if (btnNext) btnNext.disabled = v;
+    };
+
+    const next = async () => {
+      if (lock) return;
+
+      if (prefersReduce) {
+        index = clamp(index + 1);
+        await syncAll();
+        return;
+      }
+
+      lock = true;
+      disableBtns(true);
+
+      clearAnim();
+      forceRestart(elC);
+      forceRestart(elR);
+      forceRestart(elL);
+
+      // center -> left, right -> center, left -> fade out
+      elC.classList.add("anim-next-toLeft");
+      elR.classList.add("anim-next-fromRight");
+      elL.classList.add("anim-next-fadeOutLeft");
+
+      await waitAnimEnd(elC, 760);
+
+      // ROTATE elements: [L,C,R] -> [C,R,L]
+      const oldL = elL,
+        oldC = elC,
+        oldR = elR;
+      elL = oldC;
+      elC = oldR;
+      elR = oldL;
+
+      index = clamp(index + 1);
+
+      clearAnim();
+      setPosClasses();
+
+      // обновляем ТОЛЬКО новый right (это бывший oldL) — с плавным появлением
+      await fill(elR, items[clamp(index + 1)], { animate: true });
+
+      lock = false;
+      disableBtns(false);
+    };
+
+    const prev = async () => {
+      if (lock) return;
+
+      if (prefersReduce) {
+        index = clamp(index - 1);
+        await syncAll();
+        return;
+      }
+
+      lock = true;
+      disableBtns(true);
+
+      clearAnim();
+      forceRestart(elC);
+      forceRestart(elR);
+      forceRestart(elL);
+
+      // center -> right, left -> center, right -> fade out
+      elC.classList.add("anim-prev-toRight");
+      elL.classList.add("anim-prev-fromLeft");
+      elR.classList.add("anim-prev-fadeOutRight");
+
+      await waitAnimEnd(elC, 760);
+
+      // ROTATE: [L,C,R] -> [R,L,C]
+      const oldL = elL,
+        oldC = elC,
+        oldR = elR;
+      elR = oldC;
+      elC = oldL;
+      elL = oldR;
+
+      index = clamp(index - 1);
+
+      clearAnim();
+      setPosClasses();
+
+      // обновляем ТОЛЬКО новый left (это бывший oldR) — с плавным появлением
+      await fill(elL, items[clamp(index - 1)], { animate: true });
+
+      lock = false;
+      disableBtns(false);
+    };
+
+    btnNext?.addEventListener("click", next, { passive: true });
+    btnPrev?.addEventListener("click", prev, { passive: true });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
     });
 
-  const next = async () => {
-    if (lock) return;
-    if (prefersReduce) {
-      index = clamp(index + 1);
-      syncAll();
-      return;
-    }
-    lock = true;
-    btnPrev && (btnPrev.disabled = true);
-    btnNext && (btnNext.disabled = true);
-
-    clearAnim();
-    forceRestart(elC); forceRestart(elR); forceRestart(elL);
-
-    // Анимируем как у тебя в CSS:
-    // center -> left, right -> center, left -> fade out
-    elC.classList.add("anim-next-toLeft");
-    elR.classList.add("anim-next-fromRight");
-    elL.classList.add("anim-next-fadeOutLeft");
-
-    await waitAnimEnd(elC, 760);
-
-    // РОТАЦИЯ элементов (без телепортов)
-    // было: [L, C, R] -> стало: [C, R, L]
-    const oldL = elL, oldC = elC, oldR = elR;
-    elL = oldC;
-    elC = oldR;
-    elR = oldL;
-
-    index = clamp(index + 1);
-
-    // фикс классов позиций + очистка анимаций
-    clearAnim();
-    setPosClasses();
-
-    // обновляем ТОЛЬКО новый right (это бывший oldL)
-    fill(elR, items[clamp(index + 1)]);
-
-    lock = false;
-    btnPrev && (btnPrev.disabled = false);
-    btnNext && (btnNext.disabled = false);
-  };
-
-  const prev = async () => {
-    if (lock) return;
-    if (prefersReduce) {
-      index = clamp(index - 1);
-      syncAll();
-      return;
-    }
-    lock = true;
-    btnPrev && (btnPrev.disabled = true);
-    btnNext && (btnNext.disabled = true);
-
-    clearAnim();
-    forceRestart(elC); forceRestart(elR); forceRestart(elL);
-
-    // center -> right, left -> center, right -> fade out
-    elC.classList.add("anim-prev-toRight");
-    elL.classList.add("anim-prev-fromLeft");
-    elR.classList.add("anim-prev-fadeOutRight");
-
-    await waitAnimEnd(elC, 760);
-
-    // РОТАЦИЯ: [L, C, R] -> [R, L, C]
-    const oldL = elL, oldC = elC, oldR = elR;
-    elR = oldC;
-    elC = oldL;
-    elL = oldR;
-
-    index = clamp(index - 1);
-
-    clearAnim();
-    setPosClasses();
-
-    // обновляем ТОЛЬКО новый left (это бывший oldR)
-    fill(elL, items[clamp(index - 1)]);
-
-    lock = false;
-    btnPrev && (btnPrev.disabled = false);
-    btnNext && (btnNext.disabled = false);
-  };
-
-  btnNext?.addEventListener("click", next, { passive: true });
-  btnPrev?.addEventListener("click", prev, { passive: true });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") next();
-    if (e.key === "ArrowLeft") prev();
-  });
-
-  syncAll();
-})();
-
+    // init
+    syncAll();
+  })();
 
   /* ---------------------------
-     3) Contact details — FIX (no instant close, no huge empty block)
-     Manual open/close, native toggle bypassed
+     3) Details accordion — fixed height animation
   --------------------------- */
   (() => {
     const details = document.getElementById("contactDetails");
@@ -326,13 +363,12 @@
       if (busy) return;
       busy = true;
 
-      details.open = true; // важно: сначала открыть, чтобы scrollHeight был корректный
+      details.open = true;
       details.classList.add("is-open");
 
       panel.style.overflow = "hidden";
       panel.style.willChange = "height, opacity, transform";
 
-      // старт с 0
       setH(0);
       await raf2();
 
@@ -350,7 +386,6 @@
       setH(target);
       await waitEnd(panel, Math.max(400, Math.ceil(maxMotionMs(panel) + 80)));
 
-      // финал: auto чтобы не ломало адаптив/ресайз
       panel.style.height = "auto";
       panel.style.overflow = "";
       panel.style.willChange = "";
@@ -361,7 +396,6 @@
       if (busy) return;
       busy = true;
 
-      // фиксируем текущую высоту (даже если auto)
       const current = panel.scrollHeight;
       panel.style.overflow = "hidden";
       panel.style.willChange = "height, opacity, transform";
@@ -381,7 +415,6 @@
       setH(0);
       await waitEnd(panel, Math.max(400, Math.ceil(maxMotionMs(panel) + 80)));
 
-      // только ПОСЛЕ анимации реально закрываем <details>
       details.classList.remove("is-open");
       details.open = false;
 
@@ -390,21 +423,19 @@
       busy = false;
     };
 
-    // перехватываем клик по summary (иначе нативный toggle ломает анимацию)
     summary.addEventListener("click", (e) => {
       e.preventDefault();
       if (details.open) close();
       else open();
     });
 
-    // стартовое состояние
     details.open = false;
     details.classList.remove("is-open");
     setH(0);
   })();
 
   /* ---------------------------
-     4) Form toast — cancel previous animation
+     4) Form toast — WAAPI
   --------------------------- */
   (() => {
     const form = document.getElementById("contactForm");
@@ -417,9 +448,7 @@
       try {
         toastAnim?.cancel?.();
         toastAnim = toast.animate(keyframes, options);
-      } catch {
-        // fallback: без WAAPI
-      }
+      } catch {}
     };
 
     form.addEventListener("submit", (e) => {

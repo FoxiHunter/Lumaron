@@ -19,6 +19,10 @@
   --r-md: 14px;
 
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* glow for process cards */
+  --process-glow: rgba(210, 214, 222, 0.24);
+  --process-glow-strong: rgba(210, 214, 222, 0.36);
 }
 
 * { box-sizing: border-box; }
@@ -41,7 +45,6 @@ body {
   overflow: hidden;
   border-radius: var(--r-lg);
 
-  /* меньше мутности: меньше alpha + аккуратный градиент */
   background:
     linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)),
     rgba(10, 12, 16, 0.18);
@@ -51,7 +54,6 @@ body {
     0 26px 86px rgba(0,0,0,0.62),
     inset 0 1px 0 rgba(255,255,255,0.12);
 
-  /* главный фикс “мыльности”: blur меньше, фильтры — больше “линза” */
   backdrop-filter: blur(12px) saturate(1.25) contrast(1.18) brightness(1.06);
   -webkit-backdrop-filter: blur(12px) saturate(1.25) contrast(1.18) brightness(1.06);
 }
@@ -74,15 +76,12 @@ body {
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-
-  /* тонкий шум вместо “мыла” */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.20'/%3E%3C/svg%3E");
   mix-blend-mode: overlay;
   opacity: 0.10;
 }
 
 .glass > * { position: relative; }
-
 
 .topbar {
   position: sticky;
@@ -211,6 +210,12 @@ body {
 .card__title { margin: 0; font-size: 16px; letter-spacing: -0.01em; }
 .card__text { margin: 8px 0 0; color: var(--muted); line-height: 1.55; font-size: 14px; }
 
+/* ===========================
+   CAROUSEL (UPDATED)
+   - no overlap
+   - prettier motion
+   =========================== */
+
 .carousel {
   border-radius: var(--r-xl);
   padding: 14px;
@@ -240,19 +245,23 @@ body {
   height: 360px;
   overflow: hidden;
   border-radius: 22px;
+  isolation: isolate;
 }
 
 .slide {
   position: absolute;
   top: 50%;
-  width: min(560px, 92%);
-  transform: translate(-50%, -50%);
+  left: 50%;
+  width: min(560px, 86%);
   opacity: 0;
+
+  transform: translate(-50%, -50%) translateX(var(--x, 0px)) scale(var(--s, 1));
+  will-change: transform, opacity;
 }
 
-.slide--center { left: 50%; opacity: 1; transform: translate(-50%, -50%) scale(1); z-index: 3; }
-.slide--left { left: 22%; opacity: 0.66; transform: translate(-50%, -50%) scale(0.86); z-index: 2; }
-.slide--right { left: 78%; opacity: 0.66; transform: translate(-50%, -50%) scale(0.86); z-index: 2; }
+.slide--center { --x: 0px; --s: 1; opacity: 1; z-index: 3; }
+.slide--left   { --x: -320px; --s: 0.86; opacity: 0.62; z-index: 2; }
+.slide--right  { --x: 320px;  --s: 0.86; opacity: 0.62; z-index: 2; }
 
 .slide.anim-next-fromRight { animation: nextFromRight 520ms var(--ease) both; }
 .slide.anim-next-toLeft { animation: nextToLeft 520ms var(--ease) both; }
@@ -263,31 +272,32 @@ body {
 .slide.anim-prev-fadeOutRight { animation: fadeOutRight 520ms var(--ease) both; }
 
 @keyframes nextFromRight {
-  from { transform: translate(calc(-50% + 150px), -50%) scale(0.86); opacity: 0.66; }
-  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  from { transform: translate(-50%, -50%) translateX(320px) scale(0.86); opacity: 0.62; }
+  to   { transform: translate(-50%, -50%) translateX(0px)   scale(1);    opacity: 1; }
 }
 @keyframes nextToLeft {
-  from { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  to { transform: translate(calc(-50% - 150px), -50%) scale(0.86); opacity: 0.66; }
+  from { transform: translate(-50%, -50%) translateX(0px)    scale(1);    opacity: 1; }
+  to   { transform: translate(-50%, -50%) translateX(-320px) scale(0.86); opacity: 0.62; }
 }
 @keyframes fadeOutLeft {
-  from { transform: translate(calc(-50% - 150px), -50%) scale(0.86); opacity: 0.66; }
-  to { transform: translate(calc(-50% - 260px), -50%) scale(0.78); opacity: 0; }
+  from { transform: translate(-50%, -50%) translateX(-320px) scale(0.86); opacity: 0.62; }
+  to   { transform: translate(-50%, -50%) translateX(-480px) scale(0.78); opacity: 0; }
 }
 
 @keyframes prevFromLeft {
-  from { transform: translate(calc(-50% - 150px), -50%) scale(0.86); opacity: 0.66; }
-  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  from { transform: translate(-50%, -50%) translateX(-320px) scale(0.86); opacity: 0.62; }
+  to   { transform: translate(-50%, -50%) translateX(0px)    scale(1);    opacity: 1; }
 }
 @keyframes prevToRight {
-  from { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  to { transform: translate(calc(-50% + 150px), -50%) scale(0.86); opacity: 0.66; }
+  from { transform: translate(-50%, -50%) translateX(0px)   scale(1);    opacity: 1; }
+  to   { transform: translate(-50%, -50%) translateX(320px) scale(0.86); opacity: 0.62; }
 }
 @keyframes fadeOutRight {
-  from { transform: translate(calc(-50% + 150px), -50%) scale(0.86); opacity: 0.66; }
-  to { transform: translate(calc(-50% + 260px), -50%) scale(0.78); opacity: 0; }
+  from { transform: translate(-50%, -50%) translateX(320px) scale(0.86); opacity: 0.62; }
+  to   { transform: translate(-50%, -50%) translateX(480px) scale(0.78); opacity: 0; }
 }
 
+/* card */
 .slide__card {
   padding: 14px;
   border-radius: 24px;
@@ -298,6 +308,20 @@ body {
   -webkit-backdrop-filter: blur(18px) saturate(1.08);
   position: relative;
   overflow: hidden;
+
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 260ms var(--ease), transform 260ms var(--ease);
+  will-change: opacity, transform;
+}
+
+.slide.is-updating .slide__card{
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .slide__card{ transition: none !important; }
 }
 
 .slide__card::before {
@@ -338,19 +362,87 @@ body {
 
 .process { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 
+/* ===========================
+   PROCESS cards (FIXED GLOW)
+   - soft grey glow on hover
+   - smooth and pretty
+   =========================== */
+
 .process__card {
+  position: relative;
+  isolation: isolate; /* чтобы свечение жило под контентом и не смешивалось странно */
   padding: 18px;
   border-radius: var(--r-lg);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.06);
   box-shadow: var(--shadow-soft);
-  transition: transform 240ms var(--ease), background 240ms var(--ease), border-color 240ms var(--ease);
+
+  transition:
+    transform 240ms var(--ease),
+    background 240ms var(--ease),
+    border-color 240ms var(--ease),
+    box-shadow 320ms var(--ease),
+    filter 320ms var(--ease);
+  will-change: transform, box-shadow, filter;
 }
 
+/* слой свечения */
+.process__card::after {
+  content: "";
+  position: absolute;
+  inset: -18px;               /* наружу, чтобы glow был шире карточки */
+  border-radius: calc(var(--r-lg) + 18px);
+  pointer-events: none;
+  z-index: -1;
+
+  /* серое мягкое свечение */
+  background:
+    radial-gradient(420px 220px at 20% 15%, var(--process-glow-strong), transparent 62%),
+    radial-gradient(520px 260px at 80% 30%, var(--process-glow), transparent 62%),
+    radial-gradient(520px 260px at 50% 110%, rgba(210, 214, 222, 0.16), transparent 60%);
+
+  opacity: 0;
+  filter: blur(18px);
+  transform: translateY(10px) scale(0.98);
+  transition:
+    opacity 420ms var(--ease),
+    transform 520ms var(--ease),
+    filter 520ms var(--ease);
+}
+
+/* аккуратная подсветка по бордеру + лёгкий подъём */
 .process__card:hover {
   transform: translateY(-3px);
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 18px 56px rgba(0,0,0,0.52),
+    0 0 0 1px rgba(255,255,255,0.06) inset;
+}
+
+/* включаем glow */
+.process__card:hover::after {
+  opacity: 1;
+  filter: blur(16px);
+  transform: translateY(0) scale(1);
+}
+
+/* keyboard focus тоже красиво */
+.process__card:focus-within {
+  border-color: rgba(255,255,255,0.22);
+}
+.process__card:focus-within::after {
+  opacity: 1;
+  filter: blur(15px);
+  transform: translateY(0) scale(1);
+}
+
+/* сниженная анимация */
+@media (prefers-reduced-motion: reduce){
+  .process__card,
+  .process__card::after{
+    transition: none !important;
+  }
 }
 
 .process__num { font-weight: 850; letter-spacing: 0.06em; color: rgba(231, 233, 238, 0.55); margin-bottom: 10px; }
@@ -379,7 +471,7 @@ body {
   opacity: 0;
   transform: translateY(-6px);
   will-change: height, opacity, transform;
-  contain: layout paint; /* меньше дерготни при анимации */
+  contain: layout paint;
   transition: height 520ms var(--ease), opacity 420ms var(--ease), transform 520ms var(--ease);
 }
 
@@ -451,7 +543,8 @@ body {
   .carousel { grid-template-columns: 1fr; }
   .carousel__btn { display: none; }
   .carousel__viewport { height: 380px; }
-  .slide--left { left: 18%; }
-  .slide--right { left: 82%; }
+  .slide { width: min(560px, 92%); }
+  .slide--left { --x: -220px; }
+  .slide--right { --x: 220px; }
   .footerWide__grid { grid-template-columns: 1fr; }
 }
